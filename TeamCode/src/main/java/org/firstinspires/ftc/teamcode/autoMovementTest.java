@@ -153,9 +153,13 @@ public class autoMovementTest extends OpMode{
         //true angle
         double trueAngle = (angle - 90);
 
+        //number of 45 degree angles from 0 (unit Circle) (in radians)
+        double num45s = Math.toRadians(trueAngle / 45);
+
+
         //calculates main angle
         double r = Math.hypot(Math.cos(Math.toRadians(trueAngle)), Math.sin(Math.toRadians(trueAngle)));
-        double robotAngle = Math.atan2(Math.sin(Math.toRadians(trueAngle)), Math.cos(Math.toRadians(trueAngle))) - Math.PI / 4;
+        double robotAngle = Math.atan2(Math.sin(Math.toRadians(trueAngle)), Math.cos(Math.toRadians(trueAngle))) - Math.PI / 4 + num45s ;
 
         //make calculations based upon the input
         final double v1 = r * Math.cos(robotAngle);
