@@ -68,7 +68,9 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class EncoderTesting_Linear extends LinearOpMode {
 
     // Declare OpMode members for each of the 4 motors.
-    private ElapsedTime runtime = new ElapsedTime();
+    private ElapsedTime runtime = new ElapsedTime();  //for Driver Hub timer
+    private ElapsedTime timer = new ElapsedTime();  //for timing events
+
 
     /*
       Declare motors to type DcMotorEx
@@ -187,5 +189,50 @@ public class EncoderTesting_Linear extends LinearOpMode {
 
 
     }
+
+    /*
+    Mimics the left joystick.  rotation only
+    direction,
+        1 = clockwise
+        -1 = counter clockwise
+    velocityPercent is the percent of maxDriveTicsPerSec
+     */
+    public void rotate(int direction, double velocityPercent){
+        //change the power for each wheel
+        wheelFL.setVelocity(direction * -1 * maxDriveTicsPerSec * velocityPercent);
+        wheelFR.setVelocity(direction * -1 * maxDriveTicsPerSec * velocityPercent);
+        wheelBL.setVelocity(direction * -1 * maxDriveTicsPerSec * velocityPercent);
+        wheelBR.setVelocity(direction * -1 * maxDriveTicsPerSec * velocityPercent);
+    }
+
+    /*
+    Mimics the left joystick.  No rotation
+    angle is expected in degrees according to the unit circle
+    velocityPercent is the percent of maxDriveTicsPerSec
+     */
+    public void drive(double angle, double velocityPercent){
+
+        angle = Math.toRadians(angle);
+
+        //Get game controller input
+        double r = Math.hypot(Math.cos(angle), Math.sin(angle));
+        double robotAngle = Math.atan2(Math.sin(angle), Math.cos(angle)) - Math.PI / 4;
+        double rightX = 0;
+
+        //make calculations based upon the input
+        final double v1 = r * Math.cos(robotAngle) + rightX;
+        final double v2 = r * Math.sin(robotAngle) - rightX;
+        final double v3 = r * Math.sin(robotAngle) + rightX;
+        final double v4 = r * Math.cos(robotAngle) - rightX;
+
+        //change the power for each wheel
+        wheelFL.setVelocity(v1 * -1 * maxDriveTicsPerSec * velocityPercent);
+        wheelFR.setVelocity(v2 * -1 * maxDriveTicsPerSec * velocityPercent);
+        wheelBL.setVelocity(v3 * -1 * maxDriveTicsPerSec * velocityPercent);
+        wheelBR.setVelocity(v4 * -1 * maxDriveTicsPerSec * velocityPercent);
+
+
+    }
+
 
 }

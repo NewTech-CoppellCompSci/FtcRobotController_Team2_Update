@@ -63,7 +63,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@Autonomous(name="Run To Position Testiong", group="Hunter")
+@Autonomous(name="Run To Position Testing", group="Hunter")
 //@Disabled
 public class RunToPositionTesting extends LinearOpMode {
 
@@ -156,7 +156,7 @@ public class RunToPositionTesting extends LinearOpMode {
         //wheelFL
         wheelFL.setTargetPosition(4000);
         wheelFL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        wheelFL.setVelocity(maxDriveTicsPerSec / 2);
+        wheelFL.setVelocity(maxDriveTicsPerSec / 10);
         while (opModeIsActive()) {
             telemetry.addData("velocity", wheelFL.getVelocity());
             telemetry.addData("position", wheelFR.getCurrentPosition());
@@ -164,9 +164,13 @@ public class RunToPositionTesting extends LinearOpMode {
             telemetry.update();
         }
         while(wheelFL.isBusy()) {}
-        wheelFL.setTargetPosition(0);
+
+
+
+        wheelFL.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        wheelFL.setTargetPosition(-4000);
         wheelFL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        wheelFL.setVelocity(-1 * maxDriveTicsPerSec / 2);
+        wheelFL.setVelocity(maxDriveTicsPerSec / 2);
         while (opModeIsActive()) {
             telemetry.addData("velocity", wheelFL.getVelocity());
             telemetry.addData("position", wheelFR.getCurrentPosition());
