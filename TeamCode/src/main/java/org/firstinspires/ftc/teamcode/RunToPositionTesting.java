@@ -157,12 +157,7 @@ public class RunToPositionTesting extends LinearOpMode {
         wheelFL.setTargetPosition(4000);
         wheelFL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         wheelFL.setVelocity(maxDriveTicsPerSec / 10);
-        while (opModeIsActive()) {
-            telemetry.addData("velocity", wheelFL.getVelocity());
-            telemetry.addData("position", wheelFR.getCurrentPosition());
-            telemetry.addData("is at target", !wheelFL.isBusy());
-            telemetry.update();
-        }
+
         while(wheelFL.isBusy()) {}
 
 
@@ -171,12 +166,7 @@ public class RunToPositionTesting extends LinearOpMode {
         wheelFL.setTargetPosition(-4000);
         wheelFL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         wheelFL.setVelocity(maxDriveTicsPerSec / 2);
-        while (opModeIsActive()) {
-            telemetry.addData("velocity", wheelFL.getVelocity());
-            telemetry.addData("position", wheelFR.getCurrentPosition());
-            telemetry.addData("is at target", !wheelFL.isBusy());
-            telemetry.update();
-        }
+
     }
 
 }
