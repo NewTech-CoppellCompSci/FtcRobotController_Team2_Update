@@ -93,11 +93,13 @@ public class autoMovementTest extends OpMode{
 
 
 
+
+
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
-        wheelFL.setDirection(DcMotorSimple.Direction.FORWARD);
+        wheelFL.setDirection(DcMotorSimple.Direction.REVERSE);
         wheelFR.setDirection(DcMotorSimple.Direction.REVERSE);
-        wheelBL.setDirection(DcMotorSimple.Direction.FORWARD);
+        wheelBL.setDirection(DcMotorSimple.Direction.REVERSE);
         wheelBR.setDirection(DcMotorSimple.Direction.REVERSE);
 
 
@@ -145,21 +147,19 @@ public class autoMovementTest extends OpMode{
     //moves straight
     //power = 700 for one wheel turn
     public void travel(int angle, int power, int target){
-        wheelFL.setDirection(DcMotorSimple.Direction.FORWARD);
-        wheelFR.setDirection(DcMotorSimple.Direction.REVERSE);
-        wheelBL.setDirection(DcMotorSimple.Direction.FORWARD);
-        wheelBR.setDirection(DcMotorSimple.Direction.REVERSE);
-
         //true angle
         double trueAngle = (angle - 90);
 
         //number of 45 degree angles from 0 (unit Circle) (in radians)
         double num45s = Math.toRadians(trueAngle / 45);
+//        if (angle == 0){
+//            num45s = 7;
+//        }
 
 
         //calculates main angle
         double r = Math.hypot(Math.cos(Math.toRadians(trueAngle)), Math.sin(Math.toRadians(trueAngle)));
-        double robotAngle = Math.atan2(Math.sin(Math.toRadians(trueAngle)), Math.cos(Math.toRadians(trueAngle))) - Math.PI / 4 + num45s ;
+        double robotAngle = Math.atan2(Math.sin(Math.toRadians(trueAngle)), Math.cos(Math.toRadians(trueAngle))) - ((Math.PI / 4) + ((Math.PI / 4) * num45s));
 
         //make calculations based upon the input
         final double v1 = r * Math.cos(robotAngle);
@@ -168,7 +168,7 @@ public class autoMovementTest extends OpMode{
         final double v4 = r * Math.cos(robotAngle);
 
         //sets target position
-        wheelFL.setTargetPosition(v1 > 0 ? target : -1 * target);
+        wheelFL.setTargetPosition(v1 > 0 ? target : -1 * target); //v1 > 0 ? target : -1 * target
         wheelFR.setTargetPosition(v2 > 0 ? target : -1 * target);
         wheelBL.setTargetPosition(v3 > 0 ? target : -1 * target);
         wheelBR.setTargetPosition(v4 > 0 ? target : -1 * target);
@@ -183,9 +183,9 @@ public class autoMovementTest extends OpMode{
         //this should make it turn at v1-v4 ticks per second.
 
         wheelFL.setVelocity(v1 * power);
-        wheelFR.setVelocity(v2 * power * -1);
+        wheelFR.setVelocity(v2 * power);
         wheelBL.setVelocity(v3 * power);
-        wheelBR.setVelocity(v4 * power -1);
+        wheelBR.setVelocity(v4 * power);
 
         telemetry.addData("power ", "%.1f power", v1);
         telemetry.addData("power ", "%.1f power", v2);
@@ -288,9 +288,10 @@ public class autoMovementTest extends OpMode{
     anything else = extra test routes
      */
     public void route (int route){
-        travel(90, 1400, -1400);
-        turn(true, 180, 1400, 2000);
-        turn(false, 180, 1400, 2000);
+        travel(0, 1400, 1400);
+//        travel(90, 1400, 1400);
+//        travel(180, 1400, 1400);
+//        travel(270, 1400, 1400);
     }
 }
 
