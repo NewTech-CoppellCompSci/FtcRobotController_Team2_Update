@@ -85,3 +85,6 @@ lint/generated/
 lint/outputs/
 lint/tmp/
 # lint/reports/
+.idea/gradle.properties
+java_pid4833.hprof
+java_pid30410.hprof
