@@ -76,7 +76,7 @@ public class EncoderTesting extends OpMode
         max speed for the drive motors.
         I think max is 600
      */
-    private double maxDriveTicsPerSec = 5000;
+    private double maxDriveTicsPerSec = 3500;
 
 
 

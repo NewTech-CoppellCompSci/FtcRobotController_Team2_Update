@@ -29,15 +29,15 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
-import com.qualcomm.hardware.motors.RevRobotics20HdHexMotor;
+
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 /**
  * This file contains an example of an iterative (Non-Linear) "OpMode".
@@ -53,7 +53,7 @@ import com.qualcomm.hardware.motors.RevRobotics20HdHexMotor;
  * Remove ~or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Drive", group="Isaiah")
+@TeleOp(name="Main Drive", group="Isaiah")
 //@Disabled  This way it will run on the robot
 public class Drive extends OpMode {
     // Declare OpMode members.
@@ -64,20 +64,28 @@ public class Drive extends OpMode {
     Documentation:
     https://ftctechnh.github.io/ftc_app/doc/javadoc/com/qualcomm/robotcore/hardware/DcMotorEx.html
      */
+    private Rev2mDistanceSensor distanceR;
+    private Rev2mDistanceSensor distanceB;
+    private Rev2mDistanceSensor distanceL;
+
     private DcMotorEx wheelFL;
     private DcMotorEx wheelFR;
     private DcMotorEx wheelBL;
     private DcMotorEx wheelBR;
-    private DcMotorEx lazyT;
-    private DcMotorEx spinnerIntake;
+    private DcMotorEx lazyS;
+    private DcMotorEx intake;
     private DcMotorEx arm;
     private Servo bucket;
+
+    private int minHeight = 0;
+    private int maxHeight = 400;
+    private int currentArmPos = 0;
 
     static final double INCREMENT = 0.005;     // amount to slew servo each CYCLE_MS cycle
     static final double MIN_POS = 0.0;     // Maximum rotational position
     static final double MAX_POS = 1.0;     // Minimum rotational position\
 
-    double position; // Start at halfway position
+    double position = 0.0; // Start at bottom position
     boolean rampUp = true;
 
     /*
@@ -94,10 +102,15 @@ public class Drive extends OpMode {
         wheelFR = hardwareMap.get(DcMotorEx.class, "wheelFR");
         wheelBL = hardwareMap.get(DcMotorEx.class, "wheelBL");
         wheelBR = hardwareMap.get(DcMotorEx.class, "wheelBR");
-        lazyT = hardwareMap.get(DcMotorEx.class, "lazyT");
-        spinnerIntake = hardwareMap.get(DcMotorEx.class, "spinnerIntake");
+        lazyS = hardwareMap.get(DcMotorEx.class, "lazyS");
+        intake = hardwareMap.get(DcMotorEx.class, "intake");
         arm = hardwareMap.get(DcMotorEx.class, "arm");
         bucket = hardwareMap.get(Servo.class,"bucket");
+        distanceR = hardwareMap.get(Rev2mDistanceSensor.class, "distanceR");
+        distanceL = hardwareMap.get(Rev2mDistanceSensor.class, "distanceL");
+        distanceB = hardwareMap.get(Rev2mDistanceSensor.class, "distanceB");
+
+
 
 
 
@@ -112,8 +125,8 @@ public class Drive extends OpMode {
         wheelFR.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
         wheelBL.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
         wheelBR.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
-        lazyT.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
-        spinnerIntake.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        lazyS.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        intake.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
         arm.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
 
 
@@ -123,7 +136,9 @@ public class Drive extends OpMode {
         wheelFR.setDirection(DcMotorSimple.Direction.REVERSE);
         wheelBL.setDirection(DcMotorSimple.Direction.FORWARD);
         wheelBR.setDirection(DcMotorSimple.Direction.REVERSE);
-        position = 0.5;
+        intake.setDirection(DcMotorSimple.Direction.FORWARD);
+        arm.setDirection(DcMotorSimple.Direction.FORWARD);
+        position = 1.0;
 
 
         // Tell the driver that initialization is complete.
@@ -171,13 +186,13 @@ public class Drive extends OpMode {
 
         //Lazy Susan
         if (gamepad1.y || gamepad2.y) {
-            lazyPower = 3.0;
+            lazyPower = 0.5;
             telemetry.addData("power ", "%.1f power", lazyPower);
             telemetry.update();
 
         }
         else if (gamepad1.x || gamepad2.x) {
-            lazyPower = -3.0;
+            lazyPower = -0.5;
             telemetry.addData("power ", "%.1f power", lazyPower);
             telemetry.update();
         } else {
@@ -197,20 +212,22 @@ public class Drive extends OpMode {
         }
 
         //Arm
+        telemetry.addData("tics ", currentArmPos);
+        if ((gamepad1.right_bumper || gamepad2.right_bumper)&& currentArmPos < maxHeight) { // && currentArmPos < maxHeight
+            telemetry.addData("tics ", currentArmPos);
+            arm.setPower(1.0);
+            currentArmPos++;
 
-        if (gamepad1.right_bumper || gamepad2.right_bumper) {
-            //arm.setDirection(DcMotorSimple.Direction.FORWARD);
-            armPower = 3.0;
-            telemetry.addData("power ", "%.1f power", armPower);
             telemetry.update();
-        } else if (gamepad1.left_bumper || gamepad2.left_bumper) {
+        } else if ((gamepad1.left_bumper || gamepad2.left_bumper) && currentArmPos > minHeight) {
             //arm.setDirection(DcMotorSimple.Direction.REVERSE);
-            armPower = -3.0;
-            telemetry.addData("power", "%.1f power", armPower);
+            arm.setPower(-1.0);
+            currentArmPos--;
+            telemetry.addData("tics ", currentArmPos);
             telemetry.update();
         } else {
-            armPower = 0.0;
-            telemetry.addData("power", "%.1f power", armPower);
+            arm.setPower(0);
+            telemetry.addData("tics ", currentArmPos);
 
 
         }
@@ -228,7 +245,7 @@ public class Drive extends OpMode {
         }
         else if (gamepad1.dpad_right || gamepad2.dpad_right) {
             // Keep stepping down until we hit the min value.
-          //  telemetry.addData("position of servo", "%.1f", position);
+            //  telemetry.addData("position of servo", "%.1f", position);
             position -= INCREMENT ;
             bucket.setPosition(position);
             if (position <= MIN_POS) {
@@ -238,36 +255,34 @@ public class Drive extends OpMode {
         }
         else {
             // Keep stepping down until we hit the min value.
-            bucket.setPosition(position);
+            //bucket.setPosition(position);
             telemetry.addData("position of servo", "%.1f", position);
         }
 
 
         //change the power for each wheel
         if (gamepad1.options) {
-            wheelFL.setPower(v1 * 1.75);
-            wheelFR.setPower(v2 * -1.75);
-            wheelBL.setPower(v3 * 1.75);
-            wheelBR.setPower(v4 * -1.75);
+            wheelFL.setPower(v1 * 1.5);
+            wheelFR.setPower(v2 * -1.5);
+            wheelBL.setPower(v3 * 1.5);
+            wheelBR.setPower(v4 * -1.5);
             telemetry.addData("options", "pressed");
             telemetry.update();
         } else {
-            wheelFL.setPower(v1 * 0.5);
-            wheelFR.setPower(v2 * -0.5);
-            wheelBL.setPower(v3 * 0.5);
-            wheelBR.setPower(v4 * -0.5);
+            wheelFL.setPower(v1 * 0.7);
+            wheelFR.setPower(v2 * -0.7);
+            wheelBL.setPower(v3 * 0.7);
+            wheelBR.setPower(v4 * -0.7);
             telemetry.addData("options", "not pressed");
             telemetry.update();
         }
 
-        if (gamepad1.dpad_up) {
-            distance(20);
-        }
-
-        lazyT.setPower(lazyPower);
-        spinnerIntake.setPower(spinnerPower);
+        lazyS.setPower(lazyPower);
+        intake.setPower(spinnerPower);
         arm.setPower(armPower);
-        //bucket.setPosition(position);
+        bucket.setPosition(position);
+
+
 
     }
 
@@ -276,6 +291,12 @@ public class Drive extends OpMode {
      */
     @Override
     public void stop() {
+        while (currentArmPos != 0){
+            arm.setPower(-1.0);
+            currentArmPos--;
+            telemetry.addData("tics ", currentArmPos);
+            telemetry.update();
+        }
     }
 
     public boolean distance(int cm) //cm = how far away to check
