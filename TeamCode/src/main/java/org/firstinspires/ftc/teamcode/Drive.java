@@ -283,10 +283,10 @@ public class Drive extends OpMode {
 
         //change the power for each wheel
         if (gamepad1.options) {
-            wheelFL.setPower(v1 * 1.5);
-            wheelFR.setPower(v2 * -1.5);
-            wheelBL.setPower(v3 * 1.5);
-            wheelBR.setPower(v4 * -1.5);
+            wheelFL.setPower(v1 * 1.7);
+            wheelFR.setPower(v2 * -1.7);
+            wheelBL.setPower(v3 * 1.7);
+            wheelBR.setPower(v4 * -1.7);
             telemetry.addData("options", "pressed");
             telemetry.update();
         } else {
