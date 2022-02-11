@@ -37,6 +37,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -67,7 +68,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@Autonomous(name="Rout For Blue Warehouse", group="Linear Opmode")
+@Autonomous(name="Main Blue Auto", group="Linear Opmode")
 //@Disabled
 public class routForBlueWarehouse extends LinearOpMode {
 
@@ -86,6 +87,20 @@ public class routForBlueWarehouse extends LinearOpMode {
     private Rev2mDistanceSensor distanceR;
     private Rev2mDistanceSensor distanceB;
     private Rev2mDistanceSensor distanceL;
+
+    private DcMotorEx motorArm;
+    private double maxTicsPerSec = 3000;
+    private int targetPosition = 0;
+    private DigitalChannel armMagnet;
+
+    private int armLevelFloor;
+    private int armLevelRide;
+    private int armLevelCanTilt;
+    private int armLevel2nd;
+    private int armLevel3rd;
+    private boolean armZeroOverride;
+    private String buttonPressed;
+
 
     @Override
     public void runOpMode() {
@@ -111,6 +126,21 @@ public class routForBlueWarehouse extends LinearOpMode {
         distanceL = hardwareMap.get(Rev2mDistanceSensor.class, "distanceL");
         distanceB = hardwareMap.get(Rev2mDistanceSensor.class, "distanceB");
 
+        motorArm = hardwareMap.get(DcMotorEx.class, "arm");
+        motorArm.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        motorArm.setDirection(DcMotorSimple.Direction.FORWARD);
+        motorArm.setVelocityPIDFCoefficients(1.17, 0.117, 0, 11.7);
+        armMagnet = hardwareMap.get(DigitalChannel.class, "magneticSlide");
+        armMagnet.setMode(DigitalChannel.Mode.INPUT);
+        this.armZeroOverride = false;
+        this.armLevelFloor = 10;
+        this.armLevelRide = 500;
+        this.armLevelCanTilt = 1340;
+        this.armLevel2nd = 1015;
+        this.armLevel3rd = 1650;
+        this.targetPosition = 0;
+        this.buttonPressed = "";
+
        /*
            Set up motors so they run without the encoders
            This way they run freely.  They won't go to a specific position or count the number of rotations
@@ -125,7 +155,7 @@ public class routForBlueWarehouse extends LinearOpMode {
         arm.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         lazyS.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         intake.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-
+        this.motorArm.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
 
 
 
@@ -157,6 +187,11 @@ public class routForBlueWarehouse extends LinearOpMode {
     //moves straight
     //power = 700 for one wheel turn
     public void travel(int angle, int power, int target){
+        wheelFL.setTargetPositionTolerance(10);
+        wheelFR.setTargetPositionTolerance(10);
+        wheelBL.setTargetPositionTolerance(10);
+        wheelBR.setTargetPositionTolerance(10);
+
         wheelFL.setDirection(DcMotorSimple.Direction.REVERSE);
         wheelFR.setDirection(DcMotorSimple.Direction.REVERSE);
         wheelBL.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -215,7 +250,10 @@ public class routForBlueWarehouse extends LinearOpMode {
 
         while(wheelFL.isBusy()  ||  wheelFR.isBusy() || wheelBL.isBusy() || wheelBR.isBusy()) {
             // Let the drive team see that we're waiting on the motor
-            telemetry.addData("Status", "Waiting for the motor to reach its target");
+            telemetry.addData("FL Status", wheelFL.isBusy());
+            telemetry.addData("FR Status", wheelFR.isBusy());
+            telemetry.addData("BL Status", wheelBL.isBusy());
+            telemetry.addData("BR Status", wheelBR.isBusy());
             telemetry.update();
 
 
@@ -230,6 +268,11 @@ public class routForBlueWarehouse extends LinearOpMode {
     //moves straight
     //power = 700 for one wheel turn
     public void turn(int angle, int power, int target){
+        wheelFL.setTargetPositionTolerance(5);
+        wheelFR.setTargetPositionTolerance(5);
+        wheelBL.setTargetPositionTolerance(5);
+        wheelBR.setTargetPositionTolerance(5);
+
         wheelFL.setDirection(DcMotorSimple.Direction.REVERSE);
         wheelFR.setDirection(DcMotorSimple.Direction.FORWARD);
         wheelBL.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -348,7 +391,7 @@ public class routForBlueWarehouse extends LinearOpMode {
 
         lazyS.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
 
-        lazyS.setTargetPosition(1000); //v1 > 0 ? target : -1 * target
+        lazyS.setTargetPosition(700); //v1 > 0 ? target : -1 * target
 
         lazyS.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
 
@@ -365,6 +408,66 @@ public class routForBlueWarehouse extends LinearOpMode {
     }
 
 
+    public void secondLevel(){ //2nd level
+        this.targetPosition = armLevel2nd;
+        motorArm.setTargetPosition(this.targetPosition);
+        motorArm.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        motorArm.setVelocity(maxTicsPerSec);
+    //    buttonPressed = "X";
+        if (!armMagnet.getState()){ //not sure why it's backwards
+            motorArm.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        }
+    }
+    public void thirdLevel(){  //3rd level
+        this.targetPosition = armLevel3rd;
+        motorArm.setTargetPosition(this.targetPosition);
+        motorArm.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        motorArm.setVelocity(maxTicsPerSec);
+//        buttonPressed = "Y";
+        if (!armMagnet.getState()){ //not sure why it's backwards
+            motorArm.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        }
+    }
+    public void floorArm(){  //on floor
+        this. targetPosition = armLevelFloor;
+        motorArm.setTargetPosition(this.targetPosition);
+        motorArm.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        motorArm.setVelocity(maxTicsPerSec);
+//        buttonPressed = "A";
+        if (!armMagnet.getState()){ //not sure why it's backwards
+            motorArm.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        }
+    }
+    public void armLevelForDrive(){  //riding
+        this.targetPosition = armLevelRide;
+        motorArm.setTargetPosition(this.targetPosition);
+        motorArm.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        motorArm.setVelocity(maxTicsPerSec);
+//        buttonPressed = "B";
+        if (!armMagnet.getState()){ //not sure why it's backwards
+            motorArm.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        }
+    }
+    public void extendArm(int target){
+        this.targetPosition += target;
+        motorArm.setTargetPosition(this.targetPosition);
+        motorArm.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        motorArm.setVelocity(maxTicsPerSec);
+//        buttonPressed = "DPad_Up";
+        if (!armMagnet.getState()){ //not sure why it's backwards
+            motorArm.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        }
+    }
+    public void retractArm(int target) {
+        this.targetPosition -= target;
+        motorArm.setTargetPosition(this.targetPosition);
+        motorArm.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        motorArm.setVelocity(maxTicsPerSec);
+//        buttonPressed = "Dpad_Down";
+        if (!armMagnet.getState()){ //not sure why it's backwards
+            motorArm.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        }
+    }
 
 
     /*
@@ -380,23 +483,25 @@ public class routForBlueWarehouse extends LinearOpMode {
      turn(0, '') = left turn
      turn(180, '') = right turn
      */
-
     public void route (int route){
+        targetPosition = 0;
 //        travel(0, 1400, -1250);
 //        travel(90, 1400, 1050);
 //        turn(0, 1400, 850);
 //        travel(270, 1400, 1250);
+        extendArm(200);
         travel(0, 700, -500);
         travelUntilDistanceAway(90, distanceR, 35);
         turn(180, 1050, 425);
-        travel(90, 700, 445);
+        travel(90, 700, 470);
         turnSusan(true, 350);
-        travel(270, 700, 445);
+        travel(270, 700, 470);
         turn(0, 1050, 425);
         travel(0, 700, -420);
         turn(0, 1050, 850);
         travel(0, 3000, -4700);
         //lazy susan thing
+        retractArm(200);
 
     }
 

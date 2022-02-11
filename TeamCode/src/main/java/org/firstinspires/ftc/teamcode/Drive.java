@@ -34,6 +34,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -77,11 +78,19 @@ public class Drive extends OpMode {
     private DcMotorEx arm;
     private Servo bucket;
 
-    private int minHeight = 0;
-    private int maxHeight = 400;
-    private int currentArmPos = 0;
+    private DcMotorEx motorArm;
+    private double maxTicsPerSec = 3000;
+    private int targetPosition;
+    private DigitalChannel armMagnet;
+    private int armLevelFloor;
+    private int armLevelRide;
+    private int armLevelCanTilt;
+    private int armLevel2nd;
+    private int armLevel3rd;
+    private boolean armZeroOverride;
+    private String buttonPressed;
 
-    static final double INCREMENT = 0.005;     // amount to slew servo each CYCLE_MS cycle
+    static final double INCREMENT = 0.01;     // amount to slew servo each CYCLE_MS cycle
     static final double MIN_POS = 0.0;     // Maximum rotational position
     static final double MAX_POS = 1.0;     // Minimum rotational position\
 
@@ -110,7 +119,20 @@ public class Drive extends OpMode {
         distanceL = hardwareMap.get(Rev2mDistanceSensor.class, "distanceL");
         distanceB = hardwareMap.get(Rev2mDistanceSensor.class, "distanceB");
 
-
+        motorArm = hardwareMap.get(DcMotorEx.class, "arm");
+        motorArm.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        motorArm.setDirection(DcMotorSimple.Direction.FORWARD);
+        motorArm.setVelocityPIDFCoefficients(1.17, 0.117, 0, 11.7);
+        armMagnet = hardwareMap.get(DigitalChannel.class, "magneticSlide");
+        armMagnet.setMode(DigitalChannel.Mode.INPUT);
+        this.armZeroOverride = false;
+        this.armLevelFloor = 10;
+        this.armLevelRide = 500;
+        this.armLevelCanTilt = 1340;
+        this.armLevel2nd = 1015;
+        this.armLevel3rd = 1650;
+        this.targetPosition = 0;
+        this.buttonPressed = "";
 
 
 
@@ -136,7 +158,7 @@ public class Drive extends OpMode {
         wheelFR.setDirection(DcMotorSimple.Direction.REVERSE);
         wheelBL.setDirection(DcMotorSimple.Direction.FORWARD);
         wheelBR.setDirection(DcMotorSimple.Direction.REVERSE);
-        intake.setDirection(DcMotorSimple.Direction.FORWARD);
+        intake.setDirection(DcMotorSimple.Direction.REVERSE);
         arm.setDirection(DcMotorSimple.Direction.FORWARD);
         position = 1.0;
 
@@ -185,13 +207,13 @@ public class Drive extends OpMode {
 
 
         //Lazy Susan
-        if (gamepad1.y || gamepad2.y) {
+        if (gamepad1.y || gamepad2.dpad_right) {
             lazyPower = 0.5;
             telemetry.addData("power ", "%.1f power", lazyPower);
             telemetry.update();
 
         }
-        else if (gamepad1.x || gamepad2.x) {
+        else if (gamepad1.x || gamepad2.dpad_left) {
             lazyPower = -0.5;
             telemetry.addData("power ", "%.1f power", lazyPower);
             telemetry.update();
@@ -201,7 +223,7 @@ public class Drive extends OpMode {
 
         }
         //Spinner Intake
-        if (gamepad1.a || gamepad2.a) {
+        if (gamepad1.a) {
             spinnerPower = 1.0;
             telemetry.addData("power ", "%.1f power", gamepad1.right_trigger);
             telemetry.update();
@@ -211,29 +233,8 @@ public class Drive extends OpMode {
             telemetry.addData("power ", "%.1f power", gamepad1.right_trigger);
         }
 
-        //Arm
-        telemetry.addData("tics ", currentArmPos);
-        if ((gamepad1.right_bumper || gamepad2.right_bumper)&& currentArmPos < maxHeight) { // && currentArmPos < maxHeight
-            telemetry.addData("tics ", currentArmPos);
-            arm.setPower(1.0);
-            currentArmPos++;
-
-            telemetry.update();
-        } else if ((gamepad1.left_bumper || gamepad2.left_bumper) && currentArmPos > minHeight) {
-            //arm.setDirection(DcMotorSimple.Direction.REVERSE);
-            arm.setPower(-1.0);
-            currentArmPos--;
-            telemetry.addData("tics ", currentArmPos);
-            telemetry.update();
-        } else {
-            arm.setPower(0);
-            telemetry.addData("tics ", currentArmPos);
-
-
-        }
-
         telemetry.addData("position of servo", "%.1f", position);
-        if (gamepad1.dpad_left || gamepad2.dpad_left) {
+        if (gamepad2.left_bumper && (motorArm.getCurrentPosition() >= armLevelCanTilt)) {
             // Keep stepping up until we hit the max value.
             //telemetry.addData("position of servo", "%.1f", position);
             position += INCREMENT ;
@@ -243,7 +244,7 @@ public class Drive extends OpMode {
                 rampUp = !rampUp;   // Switch ramp direction
             }
         }
-        else if (gamepad1.dpad_right || gamepad2.dpad_right) {
+        else if (gamepad2.right_bumper && (motorArm.getCurrentPosition() >= armLevelCanTilt)) {
             // Keep stepping down until we hit the min value.
             //  telemetry.addData("position of servo", "%.1f", position);
             position -= INCREMENT ;
@@ -261,27 +262,89 @@ public class Drive extends OpMode {
 
 
         //change the power for each wheel
-        if (gamepad1.options) {
-            wheelFL.setPower(v1 * 1.5);
-            wheelFR.setPower(v2 * -1.5);
-            wheelBL.setPower(v3 * 1.5);
-            wheelBR.setPower(v4 * -1.5);
-            telemetry.addData("options", "pressed");
-            telemetry.update();
-        } else {
-            wheelFL.setPower(v1 * 0.7);
-            wheelFR.setPower(v2 * -0.7);
-            wheelBL.setPower(v3 * 0.7);
-            wheelBR.setPower(v4 * -0.7);
-            telemetry.addData("options", "not pressed");
-            telemetry.update();
-        }
+
+            wheelFL.setPower(v1 * (0.5 + gamepad1.right_trigger));
+            wheelFR.setPower(v2 * -(0.5 + gamepad1.right_trigger));
+            wheelBL.setPower(v3 * (0.5 + gamepad1.right_trigger));
+            wheelBR.setPower(v4 * -(0.5 + gamepad1.right_trigger));
 
         lazyS.setPower(lazyPower);
         intake.setPower(spinnerPower);
         arm.setPower(armPower);
         bucket.setPosition(position);
 
+
+        /*
+
+        PLAYER 2 GAMEPAD
+
+
+         */
+        //get input
+        if (gamepad2.x){ //2nd level
+            targetPosition = armLevel2nd;
+            buttonPressed = "X";
+        }
+        else if (gamepad2.y){  //3rd level
+            targetPosition = armLevel3rd;
+            buttonPressed = "Y";
+        }
+        else if (gamepad2.a){  //on floor
+            targetPosition = armLevelFloor;
+            buttonPressed = "A";
+        }
+        else if (gamepad2.b || gamepad1.b){  //riding
+            targetPosition = armLevelRide;
+            buttonPressed = "B";
+        }
+        else if(gamepad2.dpad_up) {
+            targetPosition += 10;
+            buttonPressed = "DPad_Up";
+        }
+        else if (gamepad2.dpad_down) {
+            targetPosition -= 10;
+            buttonPressed = "Dpad_Down";
+        }
+        else {
+            buttonPressed = "";
+        }
+
+        if (gamepad1.y || gamepad2.y) {
+            arm.setTargetPositionTolerance(20);
+            targetPosition = 260;
+            arm.setTargetPosition(targetPosition);
+            arm.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        }
+
+
+            /*
+                Keep the target position >= 0
+                Unless dpad_down is pressed
+             */
+        if (targetPosition < 0 && !gamepad2.dpad_down){
+            targetPosition = 0;
+        }
+
+            /*
+                check if magnet is touching sensor
+                True = NOT touching sensor
+             */
+        if (!armMagnet.getState()){ //not sure why it's backwards
+            motorArm.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        }
+
+
+        //set motor
+        motorArm.setTargetPosition(targetPosition);
+        motorArm.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        motorArm.setVelocity(maxTicsPerSec);
+
+        telemetry.addData("Arm Button: ", buttonPressed);
+        telemetry.addData("At Arm Magnet: ", !armMagnet.getState());
+        telemetry.addData("Can turn servo: ", motorArm.getCurrentPosition() >= armLevelCanTilt);
+        telemetry.addData("Arm targetPosition: ", targetPosition);
+        telemetry.addData("Arm currentPosition: ", motorArm.getCurrentPosition());
+        telemetry.update();
 
 
     }
@@ -291,12 +354,7 @@ public class Drive extends OpMode {
      */
     @Override
     public void stop() {
-        while (currentArmPos != 0){
-            arm.setPower(-1.0);
-            currentArmPos--;
-            telemetry.addData("tics ", currentArmPos);
-            telemetry.update();
-        }
+
     }
 
     public boolean distance(int cm) //cm = how far away to check
