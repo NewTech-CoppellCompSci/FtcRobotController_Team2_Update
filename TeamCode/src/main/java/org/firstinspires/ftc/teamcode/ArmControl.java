@@ -69,7 +69,7 @@ public class ArmControl extends Testing_ArmTic{
             buttonPressed = "Dpad_Down";
         }
         else {
-            buttonPressed = "";
+            buttonPressed = 1111    "";
         }
 
 
