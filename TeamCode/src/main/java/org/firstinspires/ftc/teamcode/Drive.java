@@ -202,7 +202,7 @@ public class Drive extends OpMode {
         }
         //Spinner Intake
         if (gamepad1.a || gamepad2.a) {
-            spinnerPower = 1.0;
+            spinnerPower = -1.0;
             telemetry.addData("power ", "%.1f power", gamepad1.right_trigger);
             telemetry.update();
 
