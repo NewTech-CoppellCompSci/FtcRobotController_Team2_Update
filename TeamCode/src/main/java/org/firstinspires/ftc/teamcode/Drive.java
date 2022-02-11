@@ -77,9 +77,13 @@ public class Drive extends OpMode {
     private DcMotorEx arm;
     private Servo bucket;
 
+
     private int minHeight = 0;
     private int maxHeight = 400;
     private int currentArmPos = 0;
+    private int [] armLevel1 = {0, 260};
+    private int armLevel;
+
 
     static final double INCREMENT = 0.005;     // amount to slew servo each CYCLE_MS cycle
     static final double MIN_POS = 0.0;     // Maximum rotational position
@@ -258,7 +262,17 @@ public class Drive extends OpMode {
             //bucket.setPosition(position);
             telemetry.addData("position of servo", "%.1f", position);
         }
-
+//levels for arm
+        if ((gamepad1.dpad_up || gamepad2.dpad_up) && (currentArmPos < armLevel1.length - 1)) {
+            armLevel++;
+        }
+        if ((gamepad1.dpad_down || gamepad2.dpad_down) && (currentArmPos > 0)) {
+            armLevel--;
+        }
+        if (gamepad1.y || gamepad2.y) {
+            armLevel=1;
+        }
+        //driving forklift level
 
         //change the power for each wheel
         if (gamepad1.options) {
