@@ -32,6 +32,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -263,15 +264,21 @@ public class Drive extends OpMode {
             telemetry.addData("position of servo", "%.1f", position);
         }
 //levels for arm
-        if ((gamepad1.dpad_up || gamepad2.dpad_up) && (currentArmPos < armLevel1.length - 1)) {
-            armLevel++;
-        }
-        if ((gamepad1.dpad_down || gamepad2.dpad_down) && (currentArmPos > 0)) {
-            armLevel--;
-        }
         if (gamepad1.y || gamepad2.y) {
-            armLevel=1;
+            arm.setTargetPositionTolerance(20);
+            arm.setTargetPosition(260);
+            arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
         }
+//        if ((gamepad1.dpad_up || gamepad2.dpad_up) && (currentArmPos < armLevel1.length - 1)) {
+//            armLevel++;
+//        }
+//        if ((gamepad1.dpad_down || gamepad2.dpad_down) && (currentArmPos > 0)) {
+//            armLevel--;
+//        }
+//        if (gamepad1.y || gamepad2.y) {
+//            armLevel=1;
+//        }
         //driving forklift level
 
         //change the power for each wheel
