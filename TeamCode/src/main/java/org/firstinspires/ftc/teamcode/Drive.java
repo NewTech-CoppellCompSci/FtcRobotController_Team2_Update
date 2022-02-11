@@ -97,6 +97,7 @@ public class Drive extends OpMode {
     double position = 0.0; // Start at bottom position
     boolean rampUp = true;
 
+    private int level = 1; //1 = ground, 2 = level 2, 3 = level 3
     /*
      * Code to run ONCE when the driver hits INIT
      */
@@ -129,8 +130,8 @@ public class Drive extends OpMode {
         this.armLevelFloor = 10;
         this.armLevelRide = 500;
         this.armLevelCanTilt = 1340;
-        this.armLevel2nd = 1015;
-        this.armLevel3rd = 1650;
+        this.armLevel2nd = 1650;
+        this.armLevel3rd = 2200;
         this.targetPosition = 0;
         this.buttonPressed = "";
 
@@ -207,14 +208,14 @@ public class Drive extends OpMode {
 
 
         //Lazy Susan
-        if (gamepad1.y || gamepad2.dpad_right) {
-            lazyPower = 0.5;
+        if (gamepad1.y) {
+            lazyPower = 0.25;
             telemetry.addData("power ", "%.1f power", lazyPower);
             telemetry.update();
 
         }
-        else if (gamepad1.x || gamepad2.dpad_left) {
-            lazyPower = -0.5;
+        else if (gamepad1.x) {
+            lazyPower = -0.25;
             telemetry.addData("power ", "%.1f power", lazyPower);
             telemetry.update();
         } else {
@@ -234,7 +235,7 @@ public class Drive extends OpMode {
         }
 
         telemetry.addData("position of servo", "%.1f", position);
-        if (gamepad2.left_bumper && (motorArm.getCurrentPosition() >= armLevelCanTilt)) {
+        if (gamepad2.dpad_left && (motorArm.getCurrentPosition() >= armLevelCanTilt)) {
             // Keep stepping up until we hit the max value.
             //telemetry.addData("position of servo", "%.1f", position);
             position += INCREMENT ;
@@ -244,7 +245,7 @@ public class Drive extends OpMode {
                 rampUp = !rampUp;   // Switch ramp direction
             }
         }
-        else if (gamepad2.right_bumper && (motorArm.getCurrentPosition() >= armLevelCanTilt)) {
+        else if (gamepad2.dpad_right && (motorArm.getCurrentPosition() >= armLevelCanTilt)) {
             // Keep stepping down until we hit the min value.
             //  telemetry.addData("position of servo", "%.1f", position);
             position -= INCREMENT ;
@@ -281,48 +282,44 @@ public class Drive extends OpMode {
 
          */
         //get input
-        if (gamepad2.x){ //2nd level
+        if (gamepad2.x  && position >= 0.95){ //2nd level
             targetPosition = armLevel2nd;
             buttonPressed = "X";
         }
-        else if (gamepad2.y){  //3rd level
+        else if (gamepad2.y  && position >= 0.95){  //3rd level
             targetPosition = armLevel3rd;
             buttonPressed = "Y";
         }
-        else if (gamepad2.a){  //on floor
+        else if (gamepad2.a  && position >= 0.95){  //on floor
             targetPosition = armLevelFloor;
             buttonPressed = "A";
         }
-        else if (gamepad2.b || gamepad1.b){  //riding
+        else if ((gamepad2.b || gamepad1.b) && position >= 0.95){  //riding
             targetPosition = armLevelRide;
             buttonPressed = "B";
         }
-        else if(gamepad2.dpad_up) {
+        else if(gamepad2.right_bumper && targetPosition < armLevel3rd) {
             targetPosition += 10;
-            buttonPressed = "DPad_Up";
+            buttonPressed = "right bumper";
         }
-        else if (gamepad2.dpad_down) {
+        else if (gamepad2.left_bumper && targetPosition > 0) {
             targetPosition -= 10;
-            buttonPressed = "Dpad_Down";
+            buttonPressed = "left bumper";
         }
         else {
             buttonPressed = "";
         }
 
-        if (gamepad1.y || gamepad2.y) {
-            arm.setTargetPositionTolerance(20);
-            targetPosition = 260;
-            arm.setTargetPosition(targetPosition);
-            arm.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-        }
+//        if
+
 
 
             /*
                 Keep the target position >= 0
                 Unless dpad_down is pressed
              */
-        if (targetPosition < 0 && !gamepad2.dpad_down){
-            targetPosition = 0;
+        if (arm.getCurrentPosition() == 0 && gamepad2.dpad_down){
+            targetPosition -= 10;
         }
 
             /*

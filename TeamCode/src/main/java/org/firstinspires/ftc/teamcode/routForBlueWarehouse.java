@@ -490,16 +490,16 @@ public class routForBlueWarehouse extends LinearOpMode {
 //        turn(0, 1400, 850);
 //        travel(270, 1400, 1250);
         extendArm(200);
-        travel(0, 700, -500);
+        travel(0, 1050, -500);
         travelUntilDistanceAway(90, distanceR, 35);
         turn(180, 1050, 425);
-        travel(90, 700, 470);
+        travel(90, 1050, 500);
         turnSusan(true, 350);
-        travel(270, 700, 470);
+        travel(270, 1050, 500);
         turn(0, 1050, 425);
-        travel(0, 700, -420);
+        travel(0, 1050, -380);
         turn(0, 1050, 850);
-        travel(0, 3000, -4700);
+        travel(0, 4000, -4700);
         //lazy susan thing
         retractArm(200);
 
