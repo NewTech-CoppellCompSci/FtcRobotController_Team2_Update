@@ -268,10 +268,10 @@ public class routForRedWarehouse extends LinearOpMode {
     //moves straight
     //power = 700 for one wheel turn
     public void turn(int angle, int power, int target){
-        wheelFL.setTargetPositionTolerance(5);
-        wheelFR.setTargetPositionTolerance(5);
-        wheelBL.setTargetPositionTolerance(5);
-        wheelBR.setTargetPositionTolerance(5);
+        wheelFL.setTargetPositionTolerance(0);
+        wheelFR.setTargetPositionTolerance(0);
+        wheelBL.setTargetPositionTolerance(0);
+        wheelBR.setTargetPositionTolerance(0);
 
         wheelFL.setDirection(DcMotorSimple.Direction.REVERSE);
         wheelFR.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -490,18 +490,18 @@ public class routForRedWarehouse extends LinearOpMode {
 //        turn(0, 1400, 850);
 //        travel(270, 1400, 1250);
         extendArm(200);
-        travel(0, 700, -500);
+        travel(0, 1050, -500);
         travelUntilDistanceAway(270, distanceL, 35);
-        turn(180, 1050, 850);
-        travel(90, 700, 465);
-        turnSusan(false, 350);
-        travel(270, 700, 465);
-        turn(0, 1050, 850);
-        travel(0, 700, -420);
+        turn(180, 1050, 1285);
+        travel(90, 1050, 495);
+        turnSusan(false, 300);
+        travel(270, 1050, 495);
+        turn(0, 1050, 1285);
+        travel(0, 1050, -240);
         turn(180, 1050, 800);
-        travel(0, 3000, -4700);
+        travel(0, 4000, -4700);
         //lazy susan thing
-        retractArm(200);
+        retractArm(200);     
 
     }
 

@@ -209,13 +209,13 @@ public class Drive extends OpMode {
 
         //Lazy Susan
         if (gamepad1.y) {
-            lazyPower = 0.25;
+            lazyPower = 0.24;
             telemetry.addData("power ", "%.1f power", lazyPower);
             telemetry.update();
 
         }
         else if (gamepad1.x) {
-            lazyPower = -0.25;
+            lazyPower = -0.24;
             telemetry.addData("power ", "%.1f power", lazyPower);
             telemetry.update();
         } else {
@@ -229,7 +229,13 @@ public class Drive extends OpMode {
             telemetry.addData("power ", "%.1f power", gamepad1.right_trigger);
             telemetry.update();
 
-        } else {
+        }
+        else if (gamepad1.b){
+            spinnerPower = -1.0;
+            telemetry.addData("power ", "%.1f power", gamepad1.right_trigger);
+            telemetry.update();
+        } else
+         {
             spinnerPower = 0.0;
             telemetry.addData("power ", "%.1f power", gamepad1.right_trigger);
         }
@@ -294,7 +300,7 @@ public class Drive extends OpMode {
             targetPosition = armLevelFloor;
             buttonPressed = "A";
         }
-        else if ((gamepad2.b || gamepad1.b) && position >= 0.95){  //riding
+        else if (gamepad2.b && position >= 0.95){  //riding
             targetPosition = armLevelRide;
             buttonPressed = "B";
         }

@@ -268,10 +268,10 @@ public class routForBlueWarehouse extends LinearOpMode {
     //moves straight
     //power = 700 for one wheel turn
     public void turn(int angle, int power, int target){
-        wheelFL.setTargetPositionTolerance(5);
-        wheelFR.setTargetPositionTolerance(5);
-        wheelBL.setTargetPositionTolerance(5);
-        wheelBR.setTargetPositionTolerance(5);
+        wheelFL.setTargetPositionTolerance(0);
+        wheelFR.setTargetPositionTolerance(0);
+        wheelBL.setTargetPositionTolerance(0);
+        wheelBR.setTargetPositionTolerance(0);
 
         wheelFL.setDirection(DcMotorSimple.Direction.REVERSE);
         wheelFR.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -489,19 +489,45 @@ public class routForBlueWarehouse extends LinearOpMode {
 //        travel(90, 1400, 1050);
 //        turn(0, 1400, 850);
 //        travel(270, 1400, 1250);
+
+        //FOR BLUE, PARK IN WAREHOUSE AFTER CAROUSEL
+//        extendArm(200);
+//        travel(0, 1050, -500);
+//        travelUntilDistanceAway(90, distanceR, 35);
+//        turn(180, 1050, 425);
+//        travel(90, 1050, 495);
+//        turnSusan(true, 300);
+//        travel(270, 1050, 495);
+//        turn(0, 1050, 425);
+//        travel(0, 1050, -240);
+//        turn(0, 1050, 850);
+//        travel(0, 4000, -4700);
+//        //lazy susan thing
+//        retractArm(200);
+
+        
+        //FOR BLUE, PARK IN ALLIANCE SPOT
         extendArm(200);
         travel(0, 1050, -500);
         travelUntilDistanceAway(90, distanceR, 35);
         turn(180, 1050, 425);
-        travel(90, 1050, 500);
+        travel(90, 1050, 530);
         turnSusan(true, 350);
-        travel(270, 1050, 500);
+        travel(270, 1050, 530);
         turn(0, 1050, 425);
-        travel(0, 1050, -380);
-        turn(0, 1050, 850);
-        travel(0, 4000, -4700);
-        //lazy susan thing
-        retractArm(200);
+        travel(0, 1050, -500);
+        travel(270, 1050, -700);
+//
+//        //lazy susan thing
+//        retractArm(200);
+
+//        //FOR BLUE, PARK IN WAREHOUSE ALONE
+//        extendArm(200);
+//        travel(0, 1050, 1250);
+//        retractArm(200);
+        
+        
+        
 
     }
 
